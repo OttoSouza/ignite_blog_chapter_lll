@@ -10,6 +10,7 @@ import Link from 'next/link';
 import ApiSearchResponse from '@prismicio/client/types/ApiSearchResponse';
 import { useState } from 'react';
 import { formatDate } from '../util/formatDate';
+import { PreviewButton } from '../components/PreviewButton/index';
 interface Post {
   uid?: string;
   first_publication_date: string | null;
@@ -27,9 +28,10 @@ interface PostPagination {
 
 interface HomeProps {
   postsPagination: PostPagination;
+  preview: boolean;
 }
 
-export default function Home({ postsPagination }: HomeProps) {
+export default function Home({ postsPagination, preview }: HomeProps) {
   const [posts, setPost] = useState<Post[]>(postsPagination.results);
   const [nextPage, setNextPage] = useState(postsPagination.next_page);
 
@@ -69,7 +71,7 @@ export default function Home({ postsPagination }: HomeProps) {
         <article className={styles.content}>
           {posts.map(post => (
             <Link key={post.uid} href={`/post/${post.uid}`}>
-              <a >
+              <a>
                 <strong>{post.data.title}</strong>
                 <p>{post.data.subtitle}</p>
                 <div>
@@ -94,12 +96,16 @@ export default function Home({ postsPagination }: HomeProps) {
             </button>
           )}
         </article>
+        <PreviewButton preview={preview} />
       </main>
     </>
   );
 }
 
-export const getStaticProps: GetStaticProps = async ({ previewData }) => {
+export const getStaticProps: GetStaticProps = async ({
+  preview = false,
+  previewData,
+}) => {
   const prismic = getPrismicClient();
   const postsResponse = await prismic.query(
     [Prismic.predicates.at('document.type', 'posts')],
@@ -121,9 +127,9 @@ export const getStaticProps: GetStaticProps = async ({ previewData }) => {
     };
   });
 
-
   return {
     props: {
+      preview,
       postsPagination: {
         next_page: postsResponse.next_page,
         results: post,

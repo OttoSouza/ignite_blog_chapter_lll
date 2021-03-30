@@ -55,6 +55,12 @@
       width: 1.25rem;
       height: 1.25rem;
     }
+    span {
+      display: block;
+      margin-top: 1.5rem;
+      color: var(--gray-300);
+      font-size: 0.8rem;
+    }
   }
 
   > div {
@@ -78,5 +84,18 @@
         }
       }
     }
+  }
+}
+
+.footerContainer {
+  width: 720px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2rem;
+  h3 {
+    color: var(--purple-500);
   }
 }

@@ -1,6 +1,6 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
-
+import Link from 'next/link';
 import { getPrismicClient } from '../../services/prismic';
 import Head from 'next/head';
 import commonStyles from '../../styles/common.module.scss';
@@ -10,6 +10,10 @@ import Prismic from '@prismicio/client';
 import { formartInHour, formatDate } from '../../util/formatDate';
 import { RichText } from 'prismic-dom';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react';
+import ApiSearchResponse from '@prismicio/client/types/ApiSearchResponse';
+import { PreviewButton } from '../../components/PreviewButton/index';
+
 interface Post {
   uid?: string;
   first_publication_date: string | null;
@@ -32,16 +36,34 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  preview: boolean;
+  prevPost: ApiSearchResponse;
+  nextPost: ApiSearchResponse;
 }
 
-export default function Post({ post }: PostProps) {
+export default function Post({ post, preview, prevPost, nextPost }: PostProps) {
   const { isFallback } = useRouter();
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    const anchor = document.getElementById('inject-comments-for-uterances');
+    script.setAttribute('src', 'https://utteranc.es/client.js');
+    script.setAttribute('theme', 'github-dark');
+    script.setAttribute('crossorigin', 'anonymous');
+    script.setAttribute('repo', 'OttoSouza/ignite_challanger_1_chapter_lll');
+    script.setAttribute('issue-term', 'pathname');
+    anchor.appendChild(script);
+  }, []);
+
   if (isFallback || !post) {
     return <p>Carregando...</p>;
   }
   const readingTime = Math.ceil(
     RichText.asText(
-      post.data.content.reduce((acc, data) => [...acc, ...data.body], [])
+      post.data.content.reduce(
+        (accumulator, data) => [...accumulator, ...data.body],
+        []
+      )
     ).split(' ').length / 200
   );
   return (
@@ -72,6 +94,10 @@ export default function Post({ post }: PostProps) {
                 <FiClock /> {readingTime} min
               </p>
             </div>
+
+            {post.last_publication_date && (
+              <span>{formartInHour(post.first_publication_date)}</span>
+            )}
           </header>
           {post.data.content.map(({ heading, body }, key) => (
             <div key={`${post.uid}.${key}`}>
@@ -83,7 +109,30 @@ export default function Post({ post }: PostProps) {
               />
             </div>
           ))}
+          <PreviewButton preview={preview} />
         </article>
+
+        <footer className={styles.footerContainer}>
+          {prevPost.results.map(prevPost => (
+            <Link href={`/post/${prevPost.uid}`}>
+              <a>
+                <h3>{prevPost?.data.title}</h3>
+                <span>Post anterior</span>
+              </a>
+            </Link>
+          ))}
+
+          {nextPost.results.map(nextPost => (
+            <Link href={`/post/${nextPost.uid}`}>
+              <a>
+                <h3>{nextPost?.data.title}</h3>
+                <span>Proximo Post</span>
+              </a>
+            </Link>
+          ))}
+        </footer >
+
+        <div id="inject-comments-for-uterances" />
       </main>
     </>
   );
@@ -94,7 +143,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
   const posts = await prismic.query(
     Prismic.Predicates.at('document.type', 'posts'),
-    { pageSize: 2 }
+    { pageSize: 1 }
   );
 
   const paths = posts.results.map(post => {
@@ -111,11 +160,37 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  preview = false,
+}) => {
   const { slug } = params;
 
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
+
+  const prevPost = await prismic.query(
+    Prismic.Predicates.at('document.type', 'posts'),
+    {
+      pageSize: 1,
+      after: slug,
+      orderings: '[document.first_publication_date desc]',
+    }
+  );
+
+  const nextPost = await prismic.query(
+    Prismic.Predicates.at('document.type', 'posts'),
+    { pageSize: 1, after: slug, orderings: '[document.first_publication_date]' }
+  );
+
+  if (!response) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  }
 
   const post = {
     uid: response.uid,
@@ -134,6 +209,6 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
   console.log(JSON.stringify(response, null, 2));
   return {
-    props: { post },
+    props: { post, preview, prevPost, nextPost },
   };
 };

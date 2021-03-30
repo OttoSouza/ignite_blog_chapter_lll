@@ -1,1 +1,82 @@
-// TODO
+.container {
+  > img {
+    width: 100vw;
+    max-height: 400px;
+    margin: 0 auto;
+  }
+  > div {
+    width: 100%;
+    max-height: 400px;
+    overflow: hidden;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    > img {
+      width: 100%;
+      display: block;
+    }
+  }
+}
+
+.content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 2rem;
+
+  h1 {
+    margin-top: 5rem;
+    font-size: 3rem;
+    line-height: 3.625rem;
+    font-weight: 700;
+  }
+
+  > header {
+    margin-top: 1.688rem;
+    div {
+      display: flex;
+      color: var(--gray-300);
+      gap: 1.5rem;
+
+      > time,
+      p {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+      }
+
+      > p {
+        line-height: 1rem;
+      }
+    }
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+
+  > div {
+    margin-top: 4.125rem;
+    > h2 {
+      font-size: 2.25rem;
+      font-weight: bold;
+      line-height: 140%;
+      color: var(--heading);
+    }
+    > div {
+      margin-top: 2rem;
+
+      p {
+        margin: 1.5rem 0;
+      }
+
+      ul {
+        li {
+          margin-left: 2rem;
+        }
+      }
+    }
+  }
+}
